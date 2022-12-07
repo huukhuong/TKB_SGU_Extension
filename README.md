@@ -1,6 +1,6 @@
 # TKB_SGU_Extension
 
-Đây là tiện ích hỗ trợ xem Thời khoá biểu theo tuần dành cho sinh viên trường Đại học Sài Gòn.
+Đây là tiện ích hỗ trợ xem Thời khoá biểu theo tuần dành cho sinh viên trường Đại học Sài Gòn. <br />
 Tiện ích được xây dựng dựa trên source code của website xem thời khoá biểu.
 
 # Nhóm tác giá:
