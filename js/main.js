@@ -5,6 +5,7 @@ $(document).ready(() => {
   rootDivPanel.style.height = $(window).height();
   rootDivPanel.innerHTML = `
     <a id="btn_close_tkb">Đóng</a>
+    <div class="author"><h1>TKB Extension by<br />Võ Hoàng Kiệt - Trần Hữu Khương</h1></div>
   `;
   // rootDivPanel.innerHTML = `
   //   <div id="studentInfo">

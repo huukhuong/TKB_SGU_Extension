@@ -36,6 +36,24 @@
   --content-width: 1200px;
 }
 
+.author {
+  position: absolute;
+  top: 600px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 100;
+}
+
+.author h1 {
+  font-size: 25px !important;
+  font-weight: 400 !important;
+  color: #fff;
+  text-shadow: 2px 0 #000, -2px 0 #000, 0 2px #000, 0 -2px #000, 1px 1px #000,
+    -1px -1px #000, 1px -1px #000, -1px 1px #000;
+  opacity: 0.2;
+}
+
 #container_HKIT {
   display: none;
   position: fixed;
@@ -100,6 +118,7 @@
   position: fixed;
   top: 20px;
   right: 20px;
+  z-index: 10000000;
 }
 
 * {
