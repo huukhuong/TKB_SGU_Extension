@@ -8,7 +8,7 @@
     "48": "icons/icon_48.png",
     "128": "icons/icon_128.png"
   },
-  "description": "Tiện ích mở rộng hỗ trợ xem TKB trường Đại học Sài Gòn.\n Tiện ích được phát triển dựa trên source code của website xem TKB theo tuần của nhóm tác giả: Võ Hoàng Kiệt và Trần Hữu Khương",
+  "description": "Tiện ích mở rộng hỗ trợ xem TKB trường Đại học Sài Gòn. Nhóm tác giả: Võ Hoàng Kiệt - Trần Hữu Khương",
   "content_scripts": [
     {
       "matches": [
