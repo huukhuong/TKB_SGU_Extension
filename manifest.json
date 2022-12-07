@@ -1,0 +1,21 @@
+{
+  "name": "TKB_SGU",
+  "manifest_version": 3,
+  "version": "1.0",
+  "author": "Võ Hoàng Kiệt - Trần Hữu Khương",
+  "icons": {
+    "16": "icons/icon_16.png",
+    "48": "icons/icon_48.png",
+    "128": "icons/icon_128.png"
+  },
+  "description": "Tiện ích mở rộng hỗ trợ xem TKB trường Đại học Sài Gòn.\n Tiện ích được phát triển dựa trên source code của website xem TKB theo tuần của nhóm tác giả: Võ Hoàng Kiệt và Trần Hữu Khương",
+  "content_scripts": [
+    {
+      "matches": [
+        "http://thongtindaotao.sgu.edu.vn/default.aspx?page=thoikhoabieu&sta=1"
+      ],
+      "js": ["./js/jquery.js", "./js/main.js"],
+      "css": ["./css/styles.css"]
+    }
+  ]
+}
