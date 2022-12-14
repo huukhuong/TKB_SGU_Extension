@@ -1,4 +1,22 @@
-$(document).ready(() => {
+$(document).ready(async () => {
+  // Get list lectures from api
+  const listLectures = await fetch(
+    'http://tkb.huukhuongit.tk/getAllLectures.php',
+    {
+      method: 'GET',
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    }
+  )
+    .then((text) => text.json())
+    .then((json) => {
+      return json;
+    })
+    .catch((error) => {
+      alert('Lỗi khi lấy danh sách giảng viên', JSON.stringify(error));
+      return [];
+    });
+
   // create a div wrapper time table
   const rootDivPanel = document.createElement('div');
   rootDivPanel.setAttribute('id', 'container_HKIT');
@@ -109,7 +127,8 @@ $(document).ready(() => {
         const sectionEnd = parseInt(sectionStart + sectionTotal - 1);
         const room = listRooms[k];
         const teacherCode = listTeachers[k];
-        const teacherName = 'Chưa có thông tin';
+        const teacherName =
+          listLectures.find((e) => e.id == teacherCode).name || '';
 
         listResults.push({
           id: id,
@@ -337,13 +356,10 @@ $(document).ready(() => {
               item.room +
               '</span>' +
               '<br />' +
-              "<i class='text-mutted'>Giờ học: </i>" +
+              "<i class='text-mutted'>Giảng viên: </i>" +
               "<span class='text-color'>" +
-              item.startTime +
-              ' -> ' +
-              item.endTime +
-              '</span>' +
-              '<br />'
+              item.teacherName +
+              '</span>'
           );
 
           const courseType = item.group;
