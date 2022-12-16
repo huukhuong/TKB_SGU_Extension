@@ -5,5 +5,5 @@ Tiện ích được xây dựng dựa trên source code của website xem thờ
 
 # Nhóm tác giá:
 
-Võ Hoàng Kiệt - Sinh viên khoa CNTT Khoá 19
+Võ Hoàng Kiệt - Sinh viên khoa CNTT Khoá 19 <br />
 Trần Hữu Khương - Sinh viên khoa CNTT Khoá 19
