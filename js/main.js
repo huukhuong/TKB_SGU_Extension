@@ -127,8 +127,8 @@ $(document).ready(async () => {
         const sectionEnd = parseInt(sectionStart + sectionTotal - 1);
         const room = listRooms[k];
         const teacherCode = listTeachers[k];
-        const teacherName =
-          listLectures.find((e) => e.id == teacherCode).name || '';
+        const findTeacher = listLectures.find((e) => e.id == teacherCode);
+        const teacherName = findTeacher ? findTeacher.name : '';
 
         listResults.push({
           id: id,
