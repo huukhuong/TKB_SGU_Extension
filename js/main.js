@@ -41,30 +41,19 @@ $(document).ready(async () => {
   $('body').append(rootDivPanel);
   $('body').append(btn_open);
 
-  //$('#btn_open_tkb').click(() => {
-  //  rootDivPanel.style.display = 'flex';
-  //  $('#btn_open_tkb').css('display', 'none');
-  ///  $('#btn_close_tkb').css('display', 'block');
+  $('#btn_open_tkb').click(() => {
+    rootDivPanel.style.display = 'flex';
+    $('#btn_open_tkb').css('display', 'none');
+    $('#btn_close_tkb').css('display', 'block');
 
-  //  isDraw = true;
- // });
+    isDraw = true;
+  });
 
-//  $('#btn_close_tkb').click(() => {
-//    rootDivPanel.style.display = 'none';
-//    $('#btn_close_tkb').css('display', 'none');
-//    $('#btn_open_tkb').css('display', 'block');
-//  });
-  $('#btnopentkb').click(() => { 
-    rootDivPanel.style.display = 'flex'; 
-    $('#btnopentkb, #btnclosetkb').css('display', 'none'); 
-    isDraw = true; 
-  }); 
-  
-  $('#btnclosetkb').click(() => { 
-    rootDivPanel.style.display = 'none'; 
-    $('#btnopentkb,#btnclosetkb').css('display', 'block'); 
-  })
-  
+  $('#btn_close_tkb').click(() => {
+    rootDivPanel.style.display = 'none';
+    $('#btn_close_tkb').css('display', 'none');
+    $('#btn_open_tkb').css('display', 'block');
+  });
 
   // create table element
   const table = document.createElement('table');
@@ -160,16 +149,14 @@ $(document).ready(async () => {
     }
 
     // Sort lại môn học theo mã môn
-    //const courseCount = listResults.length;
-    //for (let i = 0; i < courseCount - 1; i++) {
-     // for (let j = i + 1; j < courseCount; j++) {
-      //  if (listResults[i].id < listResults[j].id) {
-     //     swap(listResults[i], listResults[j]);
-     //   }
-    //  }
-  //  }
-    
-       listResults.sort((a,b) => (a.id > b.id) ? 1 : -1)
+    const courseCount = listResults.length;
+    for (let i = 0; i < courseCount - 1; i++) {
+      for (let j = i + 1; j < courseCount; j++) {
+        if (listResults[i].id < listResults[j].id) {
+          swap(listResults[i], listResults[j]);
+        }
+      }
+    }
 
     // Đánh số theo group môn
     let group = 0;
@@ -183,37 +170,30 @@ $(document).ready(async () => {
     }
 
     // Sort theo ngày học (thứ)
-   // for (let i = 0; i < courseCount - 1; i++) {
-   //   for (let j = i + 1; j < courseCount; j++) {
-   //     if (listResults[i].weekdayNumber > listResults[j].weekdayNumber) {
-  //        swap(listResults[i], listResults[j]);
-  //      }
-   //   }
-   // }
-     listResults.sort((a, b) => (a.weekdayNumber > b.weekdayNumber) ? 1 : -1);
+    for (let i = 0; i < courseCount - 1; i++) {
+      for (let j = i + 1; j < courseCount; j++) {
+        if (listResults[i].weekdayNumber > listResults[j].weekdayNumber) {
+          swap(listResults[i], listResults[j]);
+        }
+      }
+    }
 
     // Sort theo tiết bắt đầu
-    listResults.sort((a, b) => a.sectionStart > b.sectionStart);
-
-    // Sort theo tiết bắt đầu
-    //for (let i = 0; i < courseCount - 1; i++) {
-   //   for (let j = i + 1; j < courseCount; j++) {
-    //    if (listResults[i].sectionStart > listResults[j].sectionStart) {
-   //       swap(listResults[i], listResults[j]);
-   //     }
- //     }
-//    }
+    for (let i = 0; i < courseCount - 1; i++) {
+      for (let j = i + 1; j < courseCount; j++) {
+        if (listResults[i].sectionStart > listResults[j].sectionStart) {
+          swap(listResults[i], listResults[j]);
+        }
+      }
+    }
 
     return listResults;
   };
 
- // const swap = (a, b) => {
- //   const temp = a;
- //   a = b;
- //   b = temp;
- // };
-    const swap = (a, b) => { 
-    a, b = b, a; 
+  const swap = (a, b) => {
+    const temp = a;
+    a = b;
+    b = temp;
   };
 
   const plaintextDatesToArray = (str) => {
