@@ -253,15 +253,21 @@ $(document).ready(async () => {
   const getDayNum = (dayString) => {
     switch (dayString) {
       case 'Hai':
+      case 'Mon':
         return 2;
       case 'Ba':
+      case 'Tue':
         return 3;
       case 'Tư':
+      case 'Wed':
         return 4;
       case 'Năm':
+      case 'Thur':
         return 5;
+      case 'Fri':
       case 'Sáu':
         return 6;
+      case 'Sat':
       case 'Bảy':
         return 7;
       default:
