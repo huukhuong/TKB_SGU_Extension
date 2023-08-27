@@ -1,7 +1,7 @@
 $(document).ready(async () => {
   // Get list lectures from api
   const listLectures = await fetch(
-    'http://tkb.huukhuongit.tk/getAllLectures.php',
+    'http://tkb.huukhuongit.com/getAllLectures.php',
     {
       method: 'GET',
       Accept: 'application/json',
