@@ -12,7 +12,8 @@
   "content_scripts": [
     {
       "matches": [
-        "http://thongtindaotao.sgu.edu.vn/default.aspx?page=thoikhoabieu&sta=1"
+        "https://thongtindaotao.sgu.edu.vn/*",
+        "http://thongtindaotao.sgu.edu.vn/*"
       ],
       "js": ["./js/jquery.js", "./js/main.js"],
       "css": ["./css/styles.css"]
