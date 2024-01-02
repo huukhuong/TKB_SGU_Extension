@@ -65,6 +65,7 @@
   align-items: center;
   padding-top: 50px;
   transition: all ease-in 0.8s;
+  z-index: 10000000;
 }
 
 #btn_open_tkb {
@@ -91,8 +92,9 @@
   -webkit-user-select: none;
   touch-action: manipulation;
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 100px;
+  right: 50%;
+  z-index: 10000000;
 }
 
 #btn_close_tkb {
@@ -116,12 +118,12 @@
   -webkit-user-select: none;
   touch-action: manipulation;
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 100px;
+  right: 200px;
   z-index: 10000000;
 }
 
-* {
+#container_HKIT {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 0.8rem !important;
 }
