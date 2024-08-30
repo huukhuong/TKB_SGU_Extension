@@ -1,35 +1,15 @@
 $(document).ready(async () => {
-  
-  function checkRowHasZero(currentRow) {
-    return currentRow.find("td").toArray().some(td => $(td).text().trim() === "0");
+
+  const currentUserString = sessionStorage.getItem('CURRENT_USER');
+  if (!currentUserString) {
+    throw new Error('No current user found');
   }
 
+  const currentUser = JSON.parse(currentUserString);
+  const accessToken = currentUser.access_token;
 
-  setInterval(function () {
-
-    // Duyệt qua tất cả các hàng trong bảng
-    $("tr").each(function (index) {
-      let currentRow = $(this); // Hàng hiện tại
-      let nextRow = $("tr").eq(index + 1); // Hàng kế tiếp
-
-      // Kiểm tra xem hàng hiện tại có chứa giá trị 0 và hàng kế tiếp có tồn tại không
-      if (checkRowHasZero(currentRow) && nextRow.length) {
-        // Lấy tất cả các giá trị từ hàng kế tiếp
-        let index = 0;
-
-        // Duyệt qua các ô từ chỉ số 6 trở đi trong hàng hiện tại
-        currentRow.find("td").slice(6).each(function () {
-          // Lấy giá trị từ hàng kế tiếp với chỉ số bắt đầu từ index
-          let nextRowValue = nextRow.find("td").eq(index).text().trim();
-          // Cập nhật giá trị của ô hiện tại với giá trị từ hàng kế tiếp
-          $(this).text(nextRowValue);
-          index++;
-        });
-      }
-    });
-
-  }, 100);
-
+  const currentSemester = await fetchCurrentSemester(accessToken);
+  const scheduleResponse = await fetchSemesterData(currentSemester, accessToken);
 
   const main = () => {
     const pathName = window.location.href;
@@ -83,9 +63,9 @@ $(document).ready(async () => {
     `;
     rootDivPanel.append(table);
 
-    // Vẽ bảng rỗng
+    // Draw an empty table
     const table_body = $('#body_HKIT');
-    // vẽ 12 hàng ngang
+    // draw 12 horizontal rows
     for (let i = 1; i <= 12; i++) {
       const row = document.createElement('tr');
       for (let j = 1; j <= 8; j++) {
@@ -104,91 +84,11 @@ $(document).ready(async () => {
     }
 
     const processData = () => {
-      const rowDataArray = [];
-      $('tbody tr').each((index, row) => {
-        let rowData = {};
-        $(row).find('td').each((cellIndex, cell) => {
-          let key = cellIndex + "";
-          switch (cellIndex) {
-            case 0:
-              key = "maMH";
-              break;
-            case 1:
-              key = "tenMH";
-              break;
-            case 2:
-              key = "nhomMH";
-              break;
-            case 3:
-              key = "soTinChi";
-              break;
-            case 4:
-              key = "lop";
-              break;
-            case 6:
-              key = "thu";
-              break;
-            case 7:
-              key = "tietBD";
-              break;
-            case 8:
-              key = "soTiet";
-              break;
-            case 9:
-              key = "phong";
-              break;
-            case 10:
-              key = "giangVien";
-              break;
-          }
-          rowData[key] = $(cell).text().trim();
-        });
-        // nếu trong list data đã có mã môn, thứ, tiết BD trùng thì không add vào nữa
-        const findDuplicated = rowDataArray.find(e =>
-          e.maMH === rowData.maMH &&
-          e.thu === rowData.thu &&
-          e.tietBD === rowData.tietBD
-        );
-        // điều kiện chưa có item trong mảng kèm với có data mã môn, thứ, tiết BD, số tiết thì mới add
-        if (
-          !findDuplicated &&
-          rowData.maMH &&
-          rowData.thu &&
-          rowData.tietBD
-        ) {
-          rowDataArray.push(rowData);
-        }
-      });
 
-      const listResults = [];
+      const listResults = convertToArray(scheduleResponse);
 
-      for (let element of rowDataArray) {
-        const id = element.maMH;
-        const name = element.tenMH;
-        const day = element.thu;
-        const start = element.tietBD;
-        const total = element.soTiet;
-        const room = element.phong;
-        const teacher = element.giangVien;
 
-        listResults.push({
-          id: id,
-          name: name.trim(),
-          weekdayName: day,
-          weekdayNumber: day,
-          sectionStart: start,
-          sectionEnd: start + total - 1,
-          totalSection: total,
-          startTime: getTimeStart(start),
-          endTime: getTimeEnd(start + total - 1),
-          room: room,
-          teacherCode: teacher,
-          teacherName: teacher,
-          group: 0,
-        });
-      }
-
-      // Sort lại môn học theo mã môn
+      // Sort subjects by subject code
       const courseCount = listResults.length;
       for (let i = 0; i < courseCount - 1; i++) {
         for (let j = i + 1; j < courseCount; j++) {
@@ -198,7 +98,7 @@ $(document).ready(async () => {
         }
       }
 
-      // Đánh số theo group môn
+      // Numbering by subject group
       let group = 0;
       let preId = listResults[0].id;
       for (let i = 0; i < courseCount; i++) {
@@ -209,7 +109,7 @@ $(document).ready(async () => {
         listResults[i].group = group;
       }
 
-      // Sort theo ngày học (thứ)
+      // Sort by class date (day)
       for (let i = 0; i < courseCount - 1; i++) {
         for (let j = i + 1; j < courseCount; j++) {
           if (listResults[i].weekdayNumber > listResults[j].weekdayNumber) {
@@ -218,7 +118,7 @@ $(document).ready(async () => {
         }
       }
 
-      // Sort theo tiết bắt đầu
+      // Sort by start period
       for (let i = 0; i < courseCount - 1; i++) {
         for (let j = i + 1; j < courseCount; j++) {
           if (listResults[i].sectionStart > listResults[j].sectionStart) {
@@ -234,68 +134,6 @@ $(document).ready(async () => {
       const temp = a;
       a = b;
       b = temp;
-    };
-
-    const getTimeStart = (section) => {
-      switch (section) {
-        case 1:
-          return '7:00';
-        case 2:
-          return '7:50';
-        case 3:
-          return '9:00';
-        case 4:
-          return '9:50';
-        case 5:
-          return '10:40';
-        case 6:
-          return '13:00';
-        case 7:
-          return '13:50';
-        case 8:
-          return '15:00';
-        case 9:
-          return '15:50';
-        case 10:
-          return '16:40';
-        case 11:
-          return '17:40';
-        case 12:
-          return '18:30';
-        case 13:
-          return '19:20';
-      }
-    };
-
-    const getTimeEnd = (section) => {
-      switch (section) {
-        case 1:
-          return '7:50';
-        case 2:
-          return '8:40';
-        case 3:
-          return '9:50';
-        case 4:
-          return '10:40';
-        case 5:
-          return '11:30';
-        case 6:
-          return '13:50';
-        case 7:
-          return '14:40';
-        case 8:
-          return '15:50';
-        case 9:
-          return '16:40';
-        case 10:
-          return '17:30';
-        case 11:
-          return '18:30';
-        case 12:
-          return '19:20';
-        case 13:
-          return '20:10';
-      }
     };
 
     const drawTimetable = () => {
@@ -370,4 +208,135 @@ $(document).ready(async () => {
   }
 
   main();
+
+
+/**
+ * Fetches the current semester from the API.
+ *
+ * This function sends a POST request to the `w-locdshockytkbuser` endpoint of the SGU API.
+ * It retrieves the list of semesters and returns the most recent one based on sorting by `hoc_ky`.
+ *
+ * @param {string} accessToken - The access token used for authorization in the API request.
+ * @returns {Promise<string>} - A promise that resolves to the most recent semester (hoc_ky).
+ * @throws {Error} - Throws an error if no semesters are found in the response.
+ */
+  async function fetchCurrentSemester(accessToken) {
+    const response = await $.ajax({
+      url: 'https://thongtindaotao.sgu.edu.vn/api/sch/w-locdshockytkbuser',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        filter: {
+          is_tieng_anh: null
+        },
+        additional: {
+          paging: {
+            limit: 100,
+            page: 1
+          },
+          ordering: [
+            {
+              name: 'hoc_ky',
+              order_type: 1
+            }
+          ]
+        }
+      }),
+      headers: {
+        'Authorization': 'Bearer ' + accessToken
+      }
+    });
+
+    if (!response.data.ds_hoc_ky.length) {
+      throw new Error('No semesters found');
+    }
+
+    // Get the latest semester (first semester after sorting)
+    return response.data.ds_hoc_ky[0].hoc_ky;
+  }
+
+/**
+ * Fetches semester data for a specific semester from the API.
+ *
+ * This function sends a POST request to the `w-locdstkbhockytheodoituong` endpoint of the SGU API.
+ * It retrieves data for the given semester and returns the result.
+ *
+ * @param {string} hocKy - The semester code (hoc_ky) to fetch data for.
+ * @param {string} accessToken - The access token used for authorization in the API request.
+ * @returns {Promise<Object>} - A promise that resolves to the data returned by the API.
+ * @throws {Error} - Throws an error if the request fails.
+ */
+  async function fetchSemesterData(hocKy, accessToken) {
+    return await $.ajax({
+      url: 'https://thongtindaotao.sgu.edu.vn/api/sch/w-locdstkbhockytheodoituong',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        hoc_ky: hocKy,
+        loai_doi_tuong: 1,
+        id_du_lieu: null
+      }),
+      headers: {
+        'Authorization': 'Bearer ' + accessToken
+      }
+    });
+  }
+
+
+  /**
+   * Converts data from the API response into an array of course objects.
+   *
+   * This function processes the input data, which is expected to have a structure 
+   * containing an array of course groups. It maps each course group into a new object
+   * with a specific format, including properties like ID, name, weekday, start and end
+   * times, room, and teacher information.
+   *
+   * @param {Object} data - The raw data from the API response.
+   * @returns {Array<Object>} - An array of course objects with the following properties:
+   *   - id: The course ID.
+   *   - name: The course name, trimmed of whitespace.
+   *   - weekdayName: The day of the week as a string.
+   *   - weekdayNumber: The day of the week as a number.
+   *   - sectionStart: The start section of the course.
+   *   - sectionEnd: The end section of the course.
+   *   - totalSection: The total number of sections for the course.
+   *   - startTime: The start time of the course.
+   *   - endTime: The end time of the course.
+   *   - room: The room where the course is held.
+   *   - teacherCode: The code of the teacher.
+   *   - teacherName: The name of the teacher.
+   *   - group: A fixed value of 0, indicating no specific group classification.
+   */
+  function convertToArray(data) {
+
+    return data.data.ds_nhom_to.map((item) => {
+      const {
+        id_to_hoc: id,
+        ten_mon: name,
+        thu: day,
+        tbd: start,
+        so_tiet: total,
+        tu_gio: startTime,
+        den_gio: endTime,
+        phong: room,
+        gv: teacher
+      } = item;
+
+      return {
+        id,
+        name: name.trim(),
+        weekdayName: day,
+        weekdayNumber: day,
+        sectionStart: start,
+        sectionEnd: start + total - 1,
+        totalSection: total,
+        startTime: startTime,
+        endTime: endTime,
+        room,
+        teacherCode: teacher,
+        teacherName: teacher,
+        group: 0,
+      };
+    });
+  }
 });
