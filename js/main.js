@@ -1,4 +1,36 @@
 $(document).ready(async () => {
+  
+  function checkRowHasZero(currentRow) {
+    return currentRow.find("td").toArray().some(td => $(td).text().trim() === "0");
+  }
+
+
+  setInterval(function () {
+
+    // Duyệt qua tất cả các hàng trong bảng
+    $("tr").each(function (index) {
+      let currentRow = $(this); // Hàng hiện tại
+      let nextRow = $("tr").eq(index + 1); // Hàng kế tiếp
+
+      // Kiểm tra xem hàng hiện tại có chứa giá trị 0 và hàng kế tiếp có tồn tại không
+      if (checkRowHasZero(currentRow) && nextRow.length) {
+        // Lấy tất cả các giá trị từ hàng kế tiếp
+        let index = 0;
+
+        // Duyệt qua các ô từ chỉ số 6 trở đi trong hàng hiện tại
+        currentRow.find("td").slice(6).each(function () {
+          // Lấy giá trị từ hàng kế tiếp với chỉ số bắt đầu từ index
+          let nextRowValue = nextRow.find("td").eq(index).text().trim();
+          // Cập nhật giá trị của ô hiện tại với giá trị từ hàng kế tiếp
+          $(this).text(nextRowValue);
+          index++;
+        });
+      }
+    });
+
+  }, 100);
+
+
   const main = () => {
     const pathName = window.location.href;
     if (!pathName.includes("tkb")) {
