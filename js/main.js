@@ -1,35 +1,17 @@
 $(document).ready(async () => {
-  
-  function checkRowHasZero(currentRow) {
-    return currentRow.find("td").toArray().some(td => $(td).text().trim() === "0");
+
+
+
+  const currentUserString = sessionStorage.getItem('CURRENT_USER');
+  if (!currentUserString) {
+    throw new Error('No current user found');
   }
 
+  const currentUser = JSON.parse(currentUserString);
+  const accessToken = currentUser.access_token;
 
-  setInterval(function () {
-
-    // Duyệt qua tất cả các hàng trong bảng
-    $("tr").each(function (index) {
-      let currentRow = $(this); // Hàng hiện tại
-      let nextRow = $("tr").eq(index + 1); // Hàng kế tiếp
-
-      // Kiểm tra xem hàng hiện tại có chứa giá trị 0 và hàng kế tiếp có tồn tại không
-      if (checkRowHasZero(currentRow) && nextRow.length) {
-        // Lấy tất cả các giá trị từ hàng kế tiếp
-        let index = 0;
-
-        // Duyệt qua các ô từ chỉ số 6 trở đi trong hàng hiện tại
-        currentRow.find("td").slice(6).each(function () {
-          // Lấy giá trị từ hàng kế tiếp với chỉ số bắt đầu từ index
-          let nextRowValue = nextRow.find("td").eq(index).text().trim();
-          // Cập nhật giá trị của ô hiện tại với giá trị từ hàng kế tiếp
-          $(this).text(nextRowValue);
-          index++;
-        });
-      }
-    });
-
-  }, 100);
-
+  const currentSemester = await fetchCurrentSemester(accessToken);
+  const scheduleResponse  = await fetchSemesterData(currentSemester, accessToken);
 
   const main = () => {
     const pathName = window.location.href;
@@ -105,62 +87,8 @@ $(document).ready(async () => {
 
     const processData = () => {
       const rowDataArray = [];
-      $('tbody tr').each((index, row) => {
-        let rowData = {};
-        $(row).find('td').each((cellIndex, cell) => {
-          let key = cellIndex + "";
-          switch (cellIndex) {
-            case 0:
-              key = "maMH";
-              break;
-            case 1:
-              key = "tenMH";
-              break;
-            case 2:
-              key = "nhomMH";
-              break;
-            case 3:
-              key = "soTinChi";
-              break;
-            case 4:
-              key = "lop";
-              break;
-            case 6:
-              key = "thu";
-              break;
-            case 7:
-              key = "tietBD";
-              break;
-            case 8:
-              key = "soTiet";
-              break;
-            case 9:
-              key = "phong";
-              break;
-            case 10:
-              key = "giangVien";
-              break;
-          }
-          rowData[key] = $(cell).text().trim();
-        });
-        // nếu trong list data đã có mã môn, thứ, tiết BD trùng thì không add vào nữa
-        const findDuplicated = rowDataArray.find(e =>
-          e.maMH === rowData.maMH &&
-          e.thu === rowData.thu &&
-          e.tietBD === rowData.tietBD
-        );
-        // điều kiện chưa có item trong mảng kèm với có data mã môn, thứ, tiết BD, số tiết thì mới add
-        if (
-          !findDuplicated &&
-          rowData.maMH &&
-          rowData.thu &&
-          rowData.tietBD
-        ) {
-          rowDataArray.push(rowData);
-        }
-      });
-
-      const listResults = [];
+      
+      const listResults = convertToArray(scheduleResponse);
 
       for (let element of rowDataArray) {
         const id = element.maMH;
@@ -370,4 +298,101 @@ $(document).ready(async () => {
   }
 
   main();
+
+  /* Lấy thông tin các học kỳ sau đó trả về cái học kỳ mới nhất
+  */
+
+  async function fetchCurrentSemester(accessToken) {
+    const response = await $.ajax({
+      url: 'https://thongtindaotao.sgu.edu.vn/api/sch/w-locdshockytkbuser',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        filter: {
+          is_tieng_anh: null
+        },
+        additional: {
+          paging: {
+            limit: 100,
+            page: 1
+          },
+          ordering: [
+            {
+              name: 'hoc_ky',
+              order_type: 1
+            }
+          ]
+        }
+      }),
+      headers: {
+        'Authorization': 'Bearer ' + accessToken
+      }
+    });
+
+    if (!response.data.ds_hoc_ky.length) {
+      throw new Error('No semesters found');
+    }
+
+    // Lấy học kỳ mới nhất (học kỳ đầu tiên sau khi sắp xếp)
+    return response.data.ds_hoc_ky[0].hoc_ky;
+  }
+
+  /**
+   * Lấy thông tin thời khóa biểu theo học kỳ
+   * @param {*} hocKy 
+   * @param {*} accessToken 
+   * @returns 
+   */
+  async function fetchSemesterData(hocKy, accessToken) {
+    return await $.ajax({
+      url: 'https://thongtindaotao.sgu.edu.vn/api/sch/w-locdstkbhockytheodoituong',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        hoc_ky: hocKy,
+        loai_doi_tuong: 1,
+        id_du_lieu: null
+      }),
+      headers: {
+        'Authorization': 'Bearer ' + accessToken
+      }
+    });
+  }
+
+
+  /**
+   *  Convert scheduler response to data can draw
+   */
+  function convertToArray(schedulerResponse) {
+    
+    return data.data.ds_nhom_to.map((item) => {
+        const {
+            id_to_hoc: id,
+            ten_mon: name,
+            thu: day,
+            tbd: start,
+            so_tiet: total,
+            tu_gio: startTime,
+            den_gio: endTime,
+            phong: room,
+            gv: teacher
+        } = item;
+
+        return {
+            id,
+            name: name.trim(),
+            weekdayName: day,
+            weekdayNumber: day,
+            sectionStart: start,
+            sectionEnd: start + total - 1,
+            totalSection: total,
+            startTime: startTime,
+            endTime: endTime,
+            room,
+            teacherCode: teacher,
+            teacherName: teacher,
+            group: 0,
+        };
+    });
+}
 });
