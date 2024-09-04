@@ -1,22 +1,15 @@
 $(document).ready(async () => {
-  let currentUserString = sessionStorage.getItem('CURRENT_USER');
-  if (!currentUserString) {
-    alert('No current user found');
-  }
+  let loop;
+  let currentUserString = null;
 
   let isDrawUser = '';
-  let currentUser = JSON.parse(currentUserString);
-  let accessToken = currentUser.access_token;
+  let currentUser = null;
+  let accessToken = '';
 
-  const currentSemester = await fetchCurrentSemester(accessToken);
-  let scheduleResponse = await fetchSemesterData(currentSemester, accessToken);
+  let currentSemester = null;
+  let scheduleResponse = null;
 
   const main = () => {
-    // const pathName = window.location.href;
-    // if (!pathName.includes('tkb')) {
-    //   return;
-    // }
-    // create a div wrapper time table
     const rootDivPanel = document.createElement('div');
     rootDivPanel.setAttribute('id', 'container_HKIT');
     rootDivPanel.style.height = $(window).height();
@@ -368,5 +361,23 @@ $(document).ready(async () => {
       });
   };
 
-  main();
+  loop = setInterval(() => {
+    triggerLogin();
+  }, 1000);
+
+  const triggerLogin = async () => {
+    currentUserString = sessionStorage.getItem('CURRENT_USER');
+
+    if (currentUserString) {
+      loop && clearInterval(loop);
+
+      currentUser = JSON.parse(currentUserString);
+      accessToken = currentUser.access_token;
+
+      main();
+
+      currentSemester = await fetchCurrentSemester(accessToken);
+      scheduleResponse = await fetchSemesterData(currentSemester, accessToken);
+    }
+  };
 });
