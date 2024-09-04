@@ -1,21 +1,21 @@
 $(document).ready(async () => {
-
-  const currentUserString = sessionStorage.getItem('CURRENT_USER');
+  let currentUserString = sessionStorage.getItem('CURRENT_USER');
   if (!currentUserString) {
-    throw new Error('No current user found');
+    alert('No current user found');
   }
 
-  const currentUser = JSON.parse(currentUserString);
-  const accessToken = currentUser.access_token;
+  let isDrawUser = '';
+  let currentUser = JSON.parse(currentUserString);
+  let accessToken = currentUser.access_token;
 
   const currentSemester = await fetchCurrentSemester(accessToken);
-  const scheduleResponse = await fetchSemesterData(currentSemester, accessToken);
+  let scheduleResponse = await fetchSemesterData(currentSemester, accessToken);
 
   const main = () => {
-    const pathName = window.location.href;
-    if (!pathName.includes("tkb")) {
-      return;
-    }
+    // const pathName = window.location.href;
+    // if (!pathName.includes('tkb')) {
+    //   return;
+    // }
     // create a div wrapper time table
     const rootDivPanel = document.createElement('div');
     rootDivPanel.setAttribute('id', 'container_HKIT');
@@ -36,7 +36,6 @@ $(document).ready(async () => {
       $('#btn_close_tkb').css('display', 'block');
 
       drawTimetable();
-      isDraw = true;
     });
 
     $('#btn_close_tkb').click(() => {
@@ -48,7 +47,14 @@ $(document).ready(async () => {
     // create table element
     const table = document.createElement('table');
     table.setAttribute('id', 'table_HKIT');
-    table.innerHTML = `
+    rootDivPanel.append(table);
+
+    resetTable();
+  };
+
+  const resetTable = () => {
+    const table = $('#table_HKIT');
+    table.html(`
       <thead>
           <td class="stt bg-white"></td>
           <td class="thead_td">Thứ Hai</td>
@@ -60,100 +66,115 @@ $(document).ready(async () => {
           <td class="stt bg-white"></td>
         </thead>
       <tbody id="body_HKIT"></tbody>
-    `;
-    rootDivPanel.append(table);
+    `);
 
     // Draw an empty table
     const table_body = $('#body_HKIT');
     // draw 12 horizontal rows
     for (let i = 1; i <= 12; i++) {
-      const row = document.createElement('tr');
+      const row = $('<tr></tr>');
       for (let j = 1; j <= 8; j++) {
         const className = 'col_basic';
-        const col = document.createElement('td');
+        const col = $('<td></td>');
         if (j == 1 || j == 8) {
-          col.className = 'stt';
-          col.innerHTML = '<div>' + 'Tiết ' + i + '</div>';
+          col.addClass('stt');
+          col.html('<div>' + 'Tiết ' + i + '</div>');
         } else {
-          col.id = `d${j}_s${i}`;
-          col.className = className;
+          col.attr('id', `d${j}_s${i}`);
+          col.addClass(className);
         }
         row.append(col);
       }
       table_body.append(row);
     }
+  };
 
-    const processData = () => {
+  const processData = async () => {
+    const listResults = await convertToArray(scheduleResponse);
 
-      const listResults = convertToArray(scheduleResponse);
-
-
-      // Sort subjects by subject code
-      const courseCount = listResults.length;
-      for (let i = 0; i < courseCount - 1; i++) {
-        for (let j = i + 1; j < courseCount; j++) {
-          if (listResults[i].id < listResults[j].id) {
-            swap(listResults[i], listResults[j]);
-          }
+    // Sort subjects by subject code
+    const courseCount = listResults.length;
+    for (let i = 0; i < courseCount - 1; i++) {
+      for (let j = i + 1; j < courseCount; j++) {
+        if (listResults[i].id < listResults[j].id) {
+          swap(listResults[i], listResults[j]);
         }
       }
+    }
 
-      // Numbering by subject group
-      let group = 0;
-      let preId = listResults[0].id;
-      for (let i = 0; i < courseCount; i++) {
-        if (preId != listResults[i].id) {
-          preId = listResults[i].id;
-          group++;
-        }
-        listResults[i].group = group;
+    // Numbering by subject group
+    let group = 0;
+    let preId = listResults[0].id;
+    for (let i = 0; i < courseCount; i++) {
+      if (preId != listResults[i].id) {
+        preId = listResults[i].id;
+        group++;
       }
+      listResults[i].group = group;
+    }
 
-      // Sort by class date (day)
-      for (let i = 0; i < courseCount - 1; i++) {
-        for (let j = i + 1; j < courseCount; j++) {
-          if (listResults[i].weekdayNumber > listResults[j].weekdayNumber) {
-            swap(listResults[i], listResults[j]);
-          }
-        }
-      }
-
-      // Sort by start period
-      for (let i = 0; i < courseCount - 1; i++) {
-        for (let j = i + 1; j < courseCount; j++) {
-          if (listResults[i].sectionStart > listResults[j].sectionStart) {
-            swap(listResults[i], listResults[j]);
-          }
+    // Sort by class date (day)
+    for (let i = 0; i < courseCount - 1; i++) {
+      for (let j = i + 1; j < courseCount; j++) {
+        if (listResults[i].weekdayNumber > listResults[j].weekdayNumber) {
+          swap(listResults[i], listResults[j]);
         }
       }
+    }
 
-      return listResults;
-    };
+    // Sort by start period
+    for (let i = 0; i < courseCount - 1; i++) {
+      for (let j = i + 1; j < courseCount; j++) {
+        if (listResults[i].sectionStart > listResults[j].sectionStart) {
+          swap(listResults[i], listResults[j]);
+        }
+      }
+    }
 
-    const swap = (a, b) => {
-      const temp = a;
-      a = b;
-      b = temp;
-    };
+    return listResults;
+  };
 
-    const drawTimetable = () => {
-      const data = processData();
-      data.map((item, index) => {
-        const start = item.sectionStart;
-        const day = item.weekdayNumber;
-        const total = item.totalSection;
+  const swap = (a, b) => {
+    const temp = a;
+    a = b;
+    b = temp;
+  };
 
-        const cell = $(`#d${day}_s${start}`);
+  const drawTimetable = async () => {
+    const _currentUserString = sessionStorage.getItem('CURRENT_USER');
 
-        if (cell) {
-          // cell.classList == 'course' : bị bỏ qua vì className không chỉ có mỗi course
-          // API v2 đã fix lỗi này
-          const classList = cell.attr('class') + '';
-          if (classList == 'col_basic') {
-            cell.attr('rowspan', total);
+    if (_currentUserString !== currentUserString) {
+      currentUserString = _currentUserString;
+      currentUser = JSON.parse(currentUserString);
+      accessToken = currentUser.access_token;
+      scheduleResponse = await fetchSemesterData(currentSemester, accessToken);
+    }
 
-            cell.html(
-              "<span class='text-color'>" +
+    if (isDrawUser === _currentUserString) {
+      return;
+    }
+    isDrawUser = currentUserString;
+
+    resetTable();
+    const data = await processData();
+    const table_body = $('#body_HKIT');
+
+    data.map((item, index) => {
+      const start = item.sectionStart;
+      const day = item.weekdayNumber;
+      const total = item.totalSection;
+
+      const cell = $(`#d${day}_s${start}`);
+
+      if (cell) {
+        // cell.classList == 'course' : bị bỏ qua vì className không chỉ có mỗi course
+        // API v2 đã fix lỗi này
+        const classList = cell.attr('class') + '';
+        if (classList == 'col_basic') {
+          cell.attr('rowspan', total);
+
+          cell.html(
+            "<span class='text-color'>" +
               item.name +
               '</span>' +
               '<br />' +
@@ -166,60 +187,56 @@ $(document).ready(async () => {
               "<span class='text-color'>" +
               item.teacherName +
               '</span>'
-            );
+          );
 
-            const courseType = item.group;
-            cell.addClass('course');
-            cell.addClass(`course-${courseType}`);
+          const courseType = item.group;
+          cell.addClass('course');
+          cell.addClass(`course-${courseType}`);
 
-            let affected = item.sectionStart;
-            for (let j = 0; j < item.totalSection - 1; j++) {
-              affected++;
-              const row = $(`#d${day}_s${affected}`);
-              if (row != null) {
-                row.remove();
-              }
+          let affected = item.sectionStart;
+          for (let j = 0; j < item.totalSection - 1; j++) {
+            affected++;
+            const row = $(`#d${day}_s${affected}`);
+            if (row != null) {
+              row.remove();
             }
           }
         }
-      });
-      // thêm hàng thứ vào cuối
-      const lastRow = document.createElement('tr');
-      lastRow.innerHTML =
-        '<td class="stt bg-white"></td>' +
-        '<td class="thead_td">Thứ Hai</td>' +
-        '<td class="thead_td">Thứ Ba</td>' +
-        '<td class="thead_td">Thứ Tư</td>' +
-        '<td class="thead_td">Thứ Năm</td>' +
-        '<td class="thead_td">Thứ Sáu</td>' +
-        '<td class="thead_td">Thứ Bảy</td>' +
-        '<td class="stt bg-white"></td>';
-      table_body.append(lastRow);
+      }
+    });
+    // thêm hàng thứ vào cuối
+    const lastRow = document.createElement('tr');
+    lastRow.innerHTML =
+      '<td class="stt bg-white"></td>' +
+      '<td class="thead_td">Thứ Hai</td>' +
+      '<td class="thead_td">Thứ Ba</td>' +
+      '<td class="thead_td">Thứ Tư</td>' +
+      '<td class="thead_td">Thứ Năm</td>' +
+      '<td class="thead_td">Thứ Sáu</td>' +
+      '<td class="thead_td">Thứ Bảy</td>' +
+      '<td class="stt bg-white"></td>';
+    table_body.append(lastRow);
 
-      // Get thông tin sinh viên
-      const msv = $('#ctl00_ContentPlaceHolder1_ctl00_lblContentMaSV').text();
-      let hoTen = $('#ctl00_ContentPlaceHolder1_ctl00_lblContentTenSV').text();
-      hoTen = hoTen.replace(':', ': ');
-      const khoa = $('#ctl00_ContentPlaceHolder1_ctl00_lblContentLopSV').text();
-      $('#studentId').text(msv);
-      $('#studentName').text(hoTen);
-      $('#studentFaculty').text(khoa);
-    };
-  }
+    // Get thông tin sinh viên
+    const msv = $('#ctl00_ContentPlaceHolder1_ctl00_lblContentMaSV').text();
+    let hoTen = $('#ctl00_ContentPlaceHolder1_ctl00_lblContentTenSV').text();
+    hoTen = hoTen.replace(':', ': ');
+    const khoa = $('#ctl00_ContentPlaceHolder1_ctl00_lblContentLopSV').text();
+    $('#studentId').text(msv);
+    $('#studentName').text(hoTen);
+    $('#studentFaculty').text(khoa);
+  };
 
-  main();
-
-
-/**
- * Fetches the current semester from the API.
- *
- * This function sends a POST request to the `w-locdshockytkbuser` endpoint of the SGU API.
- * It retrieves the list of semesters and returns the most recent one based on sorting by `hoc_ky`.
- *
- * @param {string} accessToken - The access token used for authorization in the API request.
- * @returns {Promise<string>} - A promise that resolves to the most recent semester (hoc_ky).
- * @throws {Error} - Throws an error if no semesters are found in the response.
- */
+  /**
+   * Fetches the current semester from the API.
+   *
+   * This function sends a POST request to the `w-locdshockytkbuser` endpoint of the SGU API.
+   * It retrieves the list of semesters and returns the most recent one based on sorting by `hoc_ky`.
+   *
+   * @param {string} accessToken - The access token used for authorization in the API request.
+   * @returns {Promise<string>} - A promise that resolves to the most recent semester (hoc_ky).
+   * @throws {Error} - Throws an error if no semesters are found in the response.
+   */
   async function fetchCurrentSemester(accessToken) {
     const response = await $.ajax({
       url: 'https://thongtindaotao.sgu.edu.vn/api/sch/w-locdshockytkbuser',
@@ -227,45 +244,45 @@ $(document).ready(async () => {
       contentType: 'application/json',
       data: JSON.stringify({
         filter: {
-          is_tieng_anh: null
+          is_tieng_anh: null,
         },
         additional: {
           paging: {
             limit: 100,
-            page: 1
+            page: 1,
           },
           ordering: [
             {
               name: 'hoc_ky',
-              order_type: 1
-            }
-          ]
-        }
+              order_type: 1,
+            },
+          ],
+        },
       }),
       headers: {
-        'Authorization': 'Bearer ' + accessToken
-      }
+        Authorization: 'Bearer ' + accessToken,
+      },
     });
 
     if (!response.data.ds_hoc_ky.length) {
-      throw new Error('No semesters found');
+      alert('No semesters found');
     }
 
     // Get the latest semester (first semester after sorting)
     return response.data.ds_hoc_ky[0].hoc_ky;
   }
 
-/**
- * Fetches semester data for a specific semester from the API.
- *
- * This function sends a POST request to the `w-locdstkbhockytheodoituong` endpoint of the SGU API.
- * It retrieves data for the given semester and returns the result.
- *
- * @param {string} hocKy - The semester code (hoc_ky) to fetch data for.
- * @param {string} accessToken - The access token used for authorization in the API request.
- * @returns {Promise<Object>} - A promise that resolves to the data returned by the API.
- * @throws {Error} - Throws an error if the request fails.
- */
+  /**
+   * Fetches semester data for a specific semester from the API.
+   *
+   * This function sends a POST request to the `w-locdstkbhockytheodoituong` endpoint of the SGU API.
+   * It retrieves data for the given semester and returns the result.
+   *
+   * @param {string} hocKy - The semester code (hoc_ky) to fetch data for.
+   * @param {string} accessToken - The access token used for authorization in the API request.
+   * @returns {Promise<Object>} - A promise that resolves to the data returned by the API.
+   * @throws {Error} - Throws an error if the request fails.
+   */
   async function fetchSemesterData(hocKy, accessToken) {
     return await $.ajax({
       url: 'https://thongtindaotao.sgu.edu.vn/api/sch/w-locdstkbhockytheodoituong',
@@ -274,19 +291,18 @@ $(document).ready(async () => {
       data: JSON.stringify({
         hoc_ky: hocKy,
         loai_doi_tuong: 1,
-        id_du_lieu: null
+        id_du_lieu: null,
       }),
       headers: {
-        'Authorization': 'Bearer ' + accessToken
-      }
+        Authorization: 'Bearer ' + accessToken,
+      },
     });
   }
-
 
   /**
    * Converts data from the API response into an array of course objects.
    *
-   * This function processes the input data, which is expected to have a structure 
+   * This function processes the input data, which is expected to have a structure
    * containing an array of course groups. It maps each course group into a new object
    * with a specific format, including properties like ID, name, weekday, start and end
    * times, room, and teacher information.
@@ -307,42 +323,50 @@ $(document).ready(async () => {
    *   - teacherName: The name of the teacher.
    *   - group: A fixed value of 0, indicating no specific group classification.
    */
-  function convertToArray(data) {
+  const convertToArray = async (data) => {
+    // get config môn cần xoá khỏi tkb
+    const configString = await fetch('https://tkb.huukhuongit.com/config.php');
+    const config = await configString.json();
+    const removeCourseCode = config.removeCourseCode;
+    const removeCourseName = config.removeCourseName;
 
     return data.data.ds_nhom_to
-    .filter((item) => {
-      const name = item.ten_mon;
-      return !name.includes("Giáo dục quốc phòng và an ninh III") &&
-             !name.includes("Giáo dục quốc phòng và an ninh IV");
-    })
-    .map((item) => {
-      const {
-        id_to_hoc: id,
-        ten_mon: name,
-        thu: day,
-        tbd: start,
-        so_tiet: total,
-        tu_gio: startTime,
-        den_gio: endTime,
-        phong: room,
-        gv: teacher
-      } = item;
+      .filter((item) => {
+        return (
+          !removeCourseName.includes(item.ten_mon) &&
+          !removeCourseCode.includes(item.id_to_hoc)
+        );
+      })
+      .map((item) => {
+        const {
+          id_to_hoc: id,
+          ten_mon: name,
+          thu: day,
+          tbd: start,
+          so_tiet: total,
+          tu_gio: startTime,
+          den_gio: endTime,
+          phong: room,
+          gv: teacher,
+        } = item;
 
-      return {
-        id,
-        name: name.trim(),
-        weekdayName: day,
-        weekdayNumber: day,
-        sectionStart: start,
-        sectionEnd: start + total - 1,
-        totalSection: total,
-        startTime: startTime,
-        endTime: endTime,
-        room,
-        teacherCode: teacher,
-        teacherName: teacher,
-        group: 0,
-      };
-    });
-  }
+        return {
+          id,
+          name: name.trim(),
+          weekdayName: day,
+          weekdayNumber: day,
+          sectionStart: start,
+          sectionEnd: start + total - 1,
+          totalSection: total,
+          startTime: startTime,
+          endTime: endTime,
+          room,
+          teacherCode: teacher,
+          teacherName: teacher,
+          group: 0,
+        };
+      });
+  };
+
+  main();
 });
