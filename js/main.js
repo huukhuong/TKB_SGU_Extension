@@ -309,7 +309,13 @@ $(document).ready(async () => {
    */
   function convertToArray(data) {
 
-    return data.data.ds_nhom_to.map((item) => {
+    return data.data.ds_nhom_to
+    .filter((item) => {
+      const name = item.ten_mon;
+      return !name.includes("Giáo dục quốc phòng và an ninh III") &&
+             !name.includes("Giáo dục quốc phòng và an ninh IV");
+    })
+    .map((item) => {
       const {
         id_to_hoc: id,
         ten_mon: name,
