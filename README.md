@@ -1,4 +1,5 @@
 # TKB_SGU_Extension
+### Cập nhật 4/09/2024: Tiện ích này đã loại bỏ hiển thị các môn Giáo dục quốc phòng an ninh III & IV.
 ### Cập nhật 30/08/2024: Tiện ích này đã được cập nhật để chạy trên nền web mới của trường
 ### Cập nhật 02/01/2024: Tiện ích này đã được cập nhật để chạy trên nền web mới của trường
 Link xem TKB của trường: <a href="https://thongtindaotao.sgu.edu.vn/#/tkb-hocky">https://thongtindaotao.sgu.edu.vn/#/tkb-hocky</a>
