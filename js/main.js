@@ -231,6 +231,7 @@ $(document).ready(async () => {
    * @throws {Error} - Throws an error if no semesters are found in the response.
    */
   async function fetchCurrentSemester(accessToken) {
+    console.log("ua", ua);
     const response = await $.ajax({
       url: 'https://thongtindaotao.sgu.edu.vn/api/sch/w-locdshockytkbuser',
       type: 'POST',
@@ -254,6 +255,7 @@ $(document).ready(async () => {
       }),
       headers: {
         Authorization: 'Bearer ' + accessToken,
+        'ua': await  fetchUaTokenField('SCH/W-LOCDSHOCKYTKBUSER'),
       },
     });
 
@@ -288,6 +290,7 @@ $(document).ready(async () => {
       }),
       headers: {
         Authorization: 'Bearer ' + accessToken,
+        'ua': await fetchUaTokenField('SCH/W-LOCDSTKBHOCKYTHEODOITUONG'),
       },
     });
   }
@@ -373,11 +376,35 @@ $(document).ready(async () => {
 
       currentUser = JSON.parse(currentUserString);
       accessToken = currentUser.access_token;
-
       main();
-
       currentSemester = await fetchCurrentSemester(accessToken);
       scheduleResponse = await fetchSemesterData(currentSemester, accessToken);
     }
   };
+
+
+  async function fetchUaTokenField(endpoint) {
+    try {
+       
+
+        const response = await fetch(`https://tkb.huukhuongit.com/login-credential.php?endpoint=${endpoint}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.ua;
+    } catch (error) {
+        console.error('Error fetching UA token field:', error);
+        throw error;
+    }
+}
+
+
 });
