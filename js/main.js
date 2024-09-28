@@ -152,7 +152,7 @@ $(document).ready(async () => {
     const data = await processData();
     const table_body = $('#body_HKIT');
 
-    data.map((item, index) => {
+    data.map((item, _) => {
       const start = item.sectionStart;
       const day = item.weekdayNumber;
       const total = item.totalSection;
@@ -231,9 +231,9 @@ $(document).ready(async () => {
    * @throws {Error} - Throws an error if no semesters are found in the response.
    */
   async function fetchCurrentSemester(accessToken) {
-    console.log("ua", ua);
+    const ua = await fetchUaTokenField('SCH/W-LOCDSHOCKYTKBUSER');
     const response = await $.ajax({
-      url: 'https://thongtindaotao.sgu.edu.vn/api/sch/w-locdshockytkbuser',
+      url: `${Constants.SGU_DOMAIN}/w-locdshockytkbuser`,
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify({
@@ -255,7 +255,7 @@ $(document).ready(async () => {
       }),
       headers: {
         Authorization: 'Bearer ' + accessToken,
-        'ua': await  fetchUaTokenField('SCH/W-LOCDSHOCKYTKBUSER'),
+        ua,
       },
     });
 
@@ -278,9 +278,10 @@ $(document).ready(async () => {
    * @returns {Promise<Object>} - A promise that resolves to the data returned by the API.
    * @throws {Error} - Throws an error if the request fails.
    */
-  async function fetchSemesterData(hocKy, accessToken) {
+  const fetchSemesterData = async (hocKy, accessToken) => {
+    const ua = await fetchUaTokenField('SCH/W-LOCDSTKBHOCKYTHEODOITUONG');
     return await $.ajax({
-      url: 'https://thongtindaotao.sgu.edu.vn/api/sch/w-locdstkbhockytheodoituong',
+      url: `${Constants.SGU_DOMAIN}/w-locdstkbhockytheodoituong`,
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify({
@@ -290,10 +291,10 @@ $(document).ready(async () => {
       }),
       headers: {
         Authorization: 'Bearer ' + accessToken,
-        'ua': await fetchUaTokenField('SCH/W-LOCDSTKBHOCKYTHEODOITUONG'),
+        ua,
       },
     });
-  }
+  };
 
   /**
    * Converts data from the API response into an array of course objects.
@@ -321,7 +322,7 @@ $(document).ready(async () => {
    */
   const convertToArray = async (data) => {
     // get config môn cần xoá khỏi tkb
-    const configString = await fetch('https://tkb.huukhuongit.com/config.php');
+    const configString = await fetch(`${Constants.MY_DOMAIN}/config.php`);
     const config = await configString.json();
     const removeCourseCode = config.removeCourseCode;
     const removeCourseName = config.removeCourseName;
@@ -377,34 +378,40 @@ $(document).ready(async () => {
       currentUser = JSON.parse(currentUserString);
       accessToken = currentUser.access_token;
       main();
+
+      const btnOpen = $('#btn_open_tkb');
+      btnOpen.prop('disabled', true);
+      btnOpen.html('Loading...');
+
       currentSemester = await fetchCurrentSemester(accessToken);
       scheduleResponse = await fetchSemesterData(currentSemester, accessToken);
+
+      btnOpen.prop('disabled', false);
+      btnOpen.html('Xem thời khoá biểu');
     }
   };
 
-
-  async function fetchUaTokenField(endpoint) {
+  const fetchUaTokenField = async (endpoint) => {
     try {
-       
-
-        const response = await fetch(`https://tkb.huukhuongit.com/login-credential.php?endpoint=${endpoint}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+      const response = await fetch(
+        `${Constants.MY_DOMAIN}/login-credential.php?endpoint=${endpoint}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         }
+      );
 
-        const data = await response.json();
-        return data.ua;
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.ua;
     } catch (error) {
-        console.error('Error fetching UA token field:', error);
-        throw error;
+      console.error('Error fetching UA token field:', error);
+      throw error;
     }
-}
-
-
+  };
 });

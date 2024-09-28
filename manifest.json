@@ -15,7 +15,7 @@
         "https://thongtindaotao.sgu.edu.vn/*",
         "http://thongtindaotao.sgu.edu.vn/*"
       ],
-      "js": ["./js/jquery.js", "./js/main.js"],
+      "js": ["./js/jquery.js", "./js/main.js", "./js/constants.js"],
       "css": ["./css/styles.css"]
     }
   ]
