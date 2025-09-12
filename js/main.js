@@ -2,51 +2,51 @@ $(document).ready(async () => {
   let loop;
   let currentUserString = null;
 
-  let isDrawUser = '';
+  let isDrawUser = "";
   let currentUser = null;
-  let accessToken = '';
+  let accessToken = "";
 
   let currentSemester = null;
   let scheduleResponse = null;
 
   const main = () => {
-    const rootDivPanel = document.createElement('div');
-    rootDivPanel.setAttribute('id', 'container_HKIT');
+    const rootDivPanel = document.createElement("div");
+    rootDivPanel.setAttribute("id", "container_HKIT");
     rootDivPanel.style.height = $(window).height();
     rootDivPanel.innerHTML = `
       <a id="btn_close_tkb">Đóng</a>
       <div class="author"><h1>TKB Extension by<br />Võ Hoàng Kiệt - Trần Hữu Khương</h1></div>
     `;
-    const btn_open = document.createElement('a');
+    const btn_open = document.createElement("a");
     btn_open.innerHTML = `<a id="btn_open_tkb">Xem thời khoá biểu</a>`;
 
-    $('body').append(rootDivPanel);
-    $('body').append(btn_open);
+    $("body").append(rootDivPanel);
+    $("body").append(btn_open);
 
-    $('#btn_open_tkb').click(() => {
-      rootDivPanel.style.display = 'flex';
-      $('#btn_open_tkb').css('display', 'none');
-      $('#btn_close_tkb').css('display', 'block');
+    $("#btn_open_tkb").click(() => {
+      rootDivPanel.style.display = "flex";
+      $("#btn_open_tkb").css("display", "none");
+      $("#btn_close_tkb").css("display", "block");
 
       drawTimetable();
     });
 
-    $('#btn_close_tkb').click(() => {
-      rootDivPanel.style.display = 'none';
-      $('#btn_close_tkb').css('display', 'none');
-      $('#btn_open_tkb').css('display', 'block');
+    $("#btn_close_tkb").click(() => {
+      rootDivPanel.style.display = "none";
+      $("#btn_close_tkb").css("display", "none");
+      $("#btn_open_tkb").css("display", "block");
     });
 
     // create table element
-    const table = document.createElement('table');
-    table.setAttribute('id', 'table_HKIT');
+    const table = document.createElement("table");
+    table.setAttribute("id", "table_HKIT");
     rootDivPanel.append(table);
 
     resetTable();
   };
 
   const resetTable = () => {
-    const table = $('#table_HKIT');
+    const table = $("#table_HKIT");
     table.html(`
       <thead>
           <td class="stt bg-white"></td>
@@ -62,18 +62,18 @@ $(document).ready(async () => {
     `);
 
     // Draw an empty table
-    const table_body = $('#body_HKIT');
+    const table_body = $("#body_HKIT");
     // draw 12 horizontal rows
     for (let i = 1; i <= 12; i++) {
-      const row = $('<tr></tr>');
+      const row = $("<tr></tr>");
       for (let j = 1; j <= 8; j++) {
-        const className = 'col_basic';
-        const col = $('<td></td>');
+        const className = "col_basic";
+        const col = $("<td></td>");
         if (j == 1 || j == 8) {
-          col.addClass('stt');
-          col.html('<div>' + 'Tiết ' + i + '</div>');
+          col.addClass("stt");
+          col.html("<div>" + "Tiết " + i + "</div>");
         } else {
-          col.attr('id', `d${j}_s${i}`);
+          col.attr("id", `d${j}_s${i}`);
           col.addClass(className);
         }
         row.append(col);
@@ -84,6 +84,11 @@ $(document).ready(async () => {
 
   const processData = async () => {
     const listResults = await convertToArray(scheduleResponse);
+
+    // Check if no data available
+    if (!listResults || listResults.length === 0) {
+      return [];
+    }
 
     // Sort subjects by subject code
     const courseCount = listResults.length;
@@ -134,7 +139,7 @@ $(document).ready(async () => {
   };
 
   const drawTimetable = async () => {
-    const _currentUserString = sessionStorage.getItem('CURRENT_USER');
+    const _currentUserString = sessionStorage.getItem("CURRENT_USER");
 
     if (_currentUserString !== currentUserString) {
       currentUserString = _currentUserString;
@@ -150,7 +155,19 @@ $(document).ready(async () => {
 
     resetTable();
     const data = await processData();
-    const table_body = $('#body_HKIT');
+    const table_body = $("#body_HKIT");
+
+    // Check if no data available
+    if (!data || data.length === 0) {
+      const noDataRow = $("<tr></tr>");
+      const noDataCell = $(
+        '<td colspan="8" style="text-align: center; padding: 20px; color: #666;"></td>'
+      );
+      noDataCell.html("Không có dữ liệu thời khóa biểu cho học kỳ này");
+      noDataRow.append(noDataCell);
+      table_body.append(noDataRow);
+      return;
+    }
 
     data.map((item, _) => {
       const start = item.sectionStart;
@@ -162,28 +179,28 @@ $(document).ready(async () => {
       if (cell) {
         // cell.classList == 'course' : bị bỏ qua vì className không chỉ có mỗi course
         // API v2 đã fix lỗi này
-        const classList = cell.attr('class') + '';
-        if (classList == 'col_basic') {
-          cell.attr('rowspan', total);
+        const classList = cell.attr("class") + "";
+        if (classList == "col_basic") {
+          cell.attr("rowspan", total);
 
           cell.html(
             "<span class='text-color'>" +
               item.name +
-              '</span>' +
-              '<br />' +
+              "</span>" +
+              "<br />" +
               "<i class='text-mutted'>Phòng: </i>" +
               "<span class='text-color'>" +
               item.room +
-              '</span>' +
-              '<br />' +
+              "</span>" +
+              "<br />" +
               "<i class='text-mutted'>Giảng viên: </i>" +
               "<span class='text-color'>" +
               item.teacherName +
-              '</span>'
+              "</span>"
           );
 
           const courseType = item.group;
-          cell.addClass('course');
+          cell.addClass("course");
           cell.addClass(`course-${courseType}`);
 
           let affected = item.sectionStart;
@@ -198,7 +215,7 @@ $(document).ready(async () => {
       }
     });
     // thêm hàng thứ vào cuối
-    const lastRow = document.createElement('tr');
+    const lastRow = document.createElement("tr");
     lastRow.innerHTML =
       '<td class="stt bg-white"></td>' +
       '<td class="thead_td">Thứ Hai</td>' +
@@ -211,13 +228,13 @@ $(document).ready(async () => {
     table_body.append(lastRow);
 
     // Get thông tin sinh viên
-    const msv = $('#ctl00_ContentPlaceHolder1_ctl00_lblContentMaSV').text();
-    let hoTen = $('#ctl00_ContentPlaceHolder1_ctl00_lblContentTenSV').text();
-    hoTen = hoTen.replace(':', ': ');
-    const khoa = $('#ctl00_ContentPlaceHolder1_ctl00_lblContentLopSV').text();
-    $('#studentId').text(msv);
-    $('#studentName').text(hoTen);
-    $('#studentFaculty').text(khoa);
+    const msv = $("#ctl00_ContentPlaceHolder1_ctl00_lblContentMaSV").text();
+    let hoTen = $("#ctl00_ContentPlaceHolder1_ctl00_lblContentTenSV").text();
+    hoTen = hoTen.replace(":", ": ");
+    const khoa = $("#ctl00_ContentPlaceHolder1_ctl00_lblContentLopSV").text();
+    $("#studentId").text(msv);
+    $("#studentName").text(hoTen);
+    $("#studentFaculty").text(khoa);
   };
 
   /**
@@ -231,11 +248,11 @@ $(document).ready(async () => {
    * @throws {Error} - Throws an error if no semesters are found in the response.
    */
   async function fetchCurrentSemester(accessToken) {
-    const ua = await fetchUaTokenField('SCH/W-LOCDSHOCKYTKBUSER');
+    const ua = generateUaToken("SCH/W-LOCDSHOCKYTKBUSER");
     const response = await $.ajax({
       url: `${Constants.SGU_DOMAIN}/w-locdshockytkbuser`,
-      type: 'POST',
-      contentType: 'application/json',
+      type: "POST",
+      contentType: "application/json",
       data: JSON.stringify({
         filter: {
           is_tieng_anh: null,
@@ -247,20 +264,20 @@ $(document).ready(async () => {
           },
           ordering: [
             {
-              name: 'hoc_ky',
+              name: "hoc_ky",
               order_type: 1,
             },
           ],
         },
       }),
       headers: {
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: "Bearer " + accessToken,
         ua,
       },
     });
 
     if (!response.data.ds_hoc_ky.length) {
-      alert('No semesters found');
+      alert("No semesters found");
     }
 
     // Get the latest semester (first semester after sorting)
@@ -279,18 +296,18 @@ $(document).ready(async () => {
    * @throws {Error} - Throws an error if the request fails.
    */
   const fetchSemesterData = async (hocKy, accessToken) => {
-    const ua = await fetchUaTokenField('SCH/W-LOCDSTKBHOCKYTHEODOITUONG');
+    const ua = generateUaToken("SCH/W-LOCDSTKBHOCKYTHEODOITUONG");
     return await $.ajax({
       url: `${Constants.SGU_DOMAIN}/w-locdstkbhockytheodoituong`,
-      type: 'POST',
-      contentType: 'application/json',
+      type: "POST",
+      contentType: "application/json",
       data: JSON.stringify({
         hoc_ky: hocKy,
         loai_doi_tuong: 1,
         id_du_lieu: null,
       }),
       headers: {
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: "Bearer " + accessToken,
         ua,
       },
     });
@@ -322,10 +339,23 @@ $(document).ready(async () => {
    */
   const convertToArray = async (data) => {
     // get config môn cần xoá khỏi tkb
-    const configString = await fetch(`${Constants.MY_DOMAIN}/config.php`);
-    const config = await configString.json();
-    const removeCourseCode = config.removeCourseCode;
-    const removeCourseName = config.removeCourseName;
+    // const configString = await fetch(`${Constants.MY_DOMAIN}/config.php`);
+    // const config = await configString.json();
+    const removeCourseCode = []; // config.removeCourseCode;
+    const removeCourseName = [
+      "Giáo dục quốc phòng và an ninh III",
+      "Giáo dục quốc phòng và an ninh IV",
+    ]; // config.removeCourseName;
+
+    // Check if ds_nhom_to exists and is not empty
+    if (
+      !data.data ||
+      !data.data.ds_nhom_to ||
+      !Array.isArray(data.data.ds_nhom_to)
+    ) {
+      console.log("No schedule data available or ds_nhom_to is empty");
+      return [];
+    }
 
     return data.data.ds_nhom_to
       .filter((item) => {
@@ -349,7 +379,7 @@ $(document).ready(async () => {
 
         return {
           id,
-          name: name.trim(),
+          name: name ? name.trim() : "",
           weekdayName: day,
           weekdayNumber: day,
           sectionStart: start,
@@ -357,9 +387,9 @@ $(document).ready(async () => {
           totalSection: total,
           startTime: startTime,
           endTime: endTime,
-          room,
+          room: room || "",
           teacherCode: teacher,
-          teacherName: teacher,
+          teacherName: teacher || "",
           group: 0,
         };
       });
@@ -370,7 +400,7 @@ $(document).ready(async () => {
   }, 1000);
 
   const triggerLogin = async () => {
-    currentUserString = sessionStorage.getItem('CURRENT_USER');
+    currentUserString = sessionStorage.getItem("CURRENT_USER");
 
     if (currentUserString) {
       loop && clearInterval(loop);
@@ -379,39 +409,81 @@ $(document).ready(async () => {
       accessToken = currentUser.access_token;
       main();
 
-      const btnOpen = $('#btn_open_tkb');
-      btnOpen.prop('disabled', true);
-      btnOpen.html('Loading...');
+      const btnOpen = $("#btn_open_tkb");
+      btnOpen.prop("disabled", true);
+      btnOpen.html("Loading...");
 
       currentSemester = await fetchCurrentSemester(accessToken);
       scheduleResponse = await fetchSemesterData(currentSemester, accessToken);
 
-      btnOpen.prop('disabled', false);
-      btnOpen.html('Xem thời khoá biểu');
+      btnOpen.prop("disabled", false);
+      btnOpen.html("Xem thời khoá biểu");
     }
   };
 
-  const fetchUaTokenField = async (endpoint) => {
-    try {
-      const response = await fetch(
-        `${Constants.MY_DOMAIN}/login-credential.php?endpoint=${endpoint}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+  // Generate Ua token locally instead of fetching from server
+  const generateUaToken = (endpoint) => {
+    // Import the Ua generator logic
+    class Obfuscator {
+      generateSequence(index) {
+        const baseSequence = this.getBaseSequence();
+        const step = (index % 3) + 1;
+        const sequence = [];
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        for (let offset = 0; offset < 10; offset++) {
+          sequence.push(
+            baseSequence[(index + offset * step) % baseSequence.length]
+          );
+        }
+
+        return sequence;
       }
 
-      const data = await response.json();
-      return data.ua;
-    } catch (error) {
-      console.error('Error fetching UA token field:', error);
-      throw error;
+      getBaseSequence() {
+        const fullSequence = [
+          58, 43, 197, 133, 4, 165, 110, 3, 44, 202, 186, 28, 118, 177, 32, 94,
+          219, 6, 199, 27, 101, 191, 66, 115, 234, 120, 10, 236, 104, 108, 74,
+          247, 68, 198, 62, 203, 17, 102, 185, 42,
+        ];
+
+        return fullSequence.slice(-36).slice(0, 32);
+      }
+
+      encrypt(inputString, key) {
+        const reversedSequence = this.generateSequence(key).reverse();
+        const charCodes = Array.from(inputString).map((char) =>
+          char.charCodeAt(0)
+        );
+        let extendedSequence = [];
+
+        while (extendedSequence.length < charCodes.length) {
+          extendedSequence = extendedSequence.concat(reversedSequence);
+        }
+
+        return charCodes.map((code, index) => {
+          return code ^ extendedSequence[index];
+        });
+      }
     }
+
+    function generateAuthCode(action) {
+      const timestamp = Math.round(Date.now());
+      const randomPrefix = Math.floor(Math.random() * 90) + 10;
+      const randomSuffix = Math.floor(Math.random() * 90) + 10;
+      const sequenceString = `${randomPrefix}${timestamp}${randomSuffix}${action}`;
+      const randomKey = Math.floor(Math.random() * 32);
+
+      const obfuscator = new Obfuscator();
+      const encodedArray = [
+        randomKey + 32,
+        ...obfuscator.encrypt(sequenceString, randomKey),
+      ];
+      const encodedString = String.fromCharCode(...encodedArray);
+
+      return btoa(encodedString);
+    }
+
+    // Generate Ua token for the specific endpoint
+    return generateAuthCode(endpoint);
   };
 });

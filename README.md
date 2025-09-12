@@ -13,6 +13,7 @@ Lịch học các môn GDQP 3 - 4 sẽ không hiển thị trên TKB
 [![Watch the video](https://img.youtube.com/vi/Vl_n_8RG58Y/maxresdefault.jpg)](https://youtu.be/Vl_n_8RG58Y)
 
 # Lịch sử thay đổi
+- Cập nhật 12/09/2025: Fix lỗi không hiển thị TKB học kì mới
 - Cập nhật 04/09/2024: Loại bỏ hiển thị các môn Giáo dục quốc phòng an ninh III & IV khỏi TKB để sửa lỗi xếp chồng lịch học.
 - Cập nhật 30/08/2024: Cập nhật phương thức lấy thông tin từ DOM thành sử dụng trực tiếp API của nhà trường.
 - Cập nhật 02/01/2024: Cập nhật để chạy trên nền web mới của trường.
